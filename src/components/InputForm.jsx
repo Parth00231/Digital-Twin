@@ -10,7 +10,7 @@ export default function InputForm({ onDataUpdate, isDark }) {
     e.preventDefault();
 
     try {
-      await fetch("http://localhost:5000/api/update-data", {
+      await fetch("https://digital-twin-backend-e187.onrender.com/api/update-data", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

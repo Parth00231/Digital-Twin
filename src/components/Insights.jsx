@@ -4,7 +4,7 @@ export default function Insights({ refreshKey, isDark }) {
   const [insights, setInsights] = useState("Loading AI insights...");
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/ai-insights")
+    fetch("https://digital-twin-backend-e187.onrender.com/api/insights")
       .then((res) => res.json())
       .then((data) => {
         if (data.insights) {

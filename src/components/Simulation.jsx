@@ -15,7 +15,7 @@ export default function Simulation({ refreshKey, isDark }) {
   const [simulationData, setSimulationData] = useState(null);
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/simulate?extraHours=${extraHours}`)
+    fetch(`https://digital-twin-backend-e187.onrender.com/api/simulate?extraHours=${extraHours}`)
       .then((res) => res.json())
       .then((data) => {
         setSimulationData(data);
