@@ -13,23 +13,62 @@ import {
 export default function Simulation({ refreshKey, isDark }) {
   const [extraHours, setExtraHours] = useState(2);
   const [simulationData, setSimulationData] = useState(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch(`https://digital-twin-backend-e187.onrender.com/api/simulate?extraHours=${extraHours}`)
-      .then((res) => res.json())
-      .then((data) => {
+    const fetchSimulation = async () => {
+      try {
+        setError("");
+        const token = localStorage.getItem("token");
+
+        const API_URL = import.meta.env.VITE_API_URL;
+
+        const res = await fetch(
+         `${API_URL}/api/simulate?extraHours=${extraHours}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to fetch simulation data");
+        }
+
         setSimulationData(data);
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Error fetching simulation data:", error);
-      });
+        setError("Failed to load simulation data.");
+      }
+    };
+
+    fetchSimulation();
   }, [extraHours, refreshKey]);
+
+  if (error) {
+    return (
+      <div
+        className={`rounded-3xl border p-6 shadow-[0_10px_30px_rgba(0,0,0,0.12)] ${
+          isDark
+            ? "border-white/10 bg-white/5 text-white"
+            : "border-slate-300 bg-white/80 text-slate-900"
+        }`}
+      >
+        {error}
+      </div>
+    );
+  }
 
   if (!simulationData) {
     return (
       <div
         className={`rounded-3xl border p-6 shadow-[0_10px_30px_rgba(0,0,0,0.12)] ${
-          isDark ? "border-white/10 bg-white/5 text-white" : "border-slate-300 bg-white/80 text-slate-900"
+          isDark
+            ? "border-white/10 bg-white/5 text-white"
+            : "border-slate-300 bg-white/80 text-slate-900"
         }`}
       >
         Loading simulation...
@@ -58,12 +97,20 @@ export default function Simulation({ refreshKey, isDark }) {
 
       <div
         className={`rounded-2xl border p-4 ${
-          isDark ? "border-white/10 bg-slate-950/40" : "border-slate-200 bg-slate-50"
+          isDark
+            ? "border-white/10 bg-slate-950/40"
+            : "border-slate-200 bg-slate-50"
         }`}
       >
-        <label className={`mb-3 block text-sm ${isDark ? "text-slate-300" : "text-slate-700"}`}>
+        <label
+          className={`mb-3 block text-sm ${
+            isDark ? "text-slate-300" : "text-slate-700"
+          }`}
+        >
           Extra productive hours per day:
-          <span className="ml-2 font-semibold text-cyan-500">{extraHours} hrs</span>
+          <span className="ml-2 font-semibold text-cyan-500">
+            {extraHours} hrs
+          </span>
         </label>
 
         <input
@@ -76,20 +123,39 @@ export default function Simulation({ refreshKey, isDark }) {
         />
 
         <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <InfoBox label="Current Weekly Productive Hours" value={`${simulationData.currentWeeklyHours} hrs`} isDark={isDark} />
-          <InfoBox label="Future Weekly Productive Hours" value={`${simulationData.simulatedWeeklyHours} hrs`} highlight isDark={isDark} />
-          <InfoBox label="Projected Improvement" value={`+${simulationData.improvement}%`} highlight isDark={isDark} />
+          <InfoBox
+            label="Current Weekly Productive Hours"
+            value={`${simulationData.currentWeeklyHours} hrs`}
+            isDark={isDark}
+          />
+          <InfoBox
+            label="Future Weekly Productive Hours"
+            value={`${simulationData.simulatedWeeklyHours} hrs`}
+            highlight
+            isDark={isDark}
+          />
+          <InfoBox
+            label="Projected Improvement"
+            value={`+${simulationData.improvement}%`}
+            highlight
+            isDark={isDark}
+          />
         </div>
       </div>
 
       <div
         className={`mt-6 h-[260px] w-full rounded-2xl border p-2 ${
-          isDark ? "border-white/10 bg-slate-950/30" : "border-slate-200 bg-slate-50"
+          isDark
+            ? "border-white/10 bg-slate-950/30"
+            : "border-slate-200 bg-slate-50"
         }`}
       >
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={simulationData.graphData}>
-            <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#1e293b" : "#cbd5e1"} />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke={isDark ? "#1e293b" : "#cbd5e1"}
+            />
             <XAxis dataKey="week" stroke={isDark ? "#94a3b8" : "#475569"} />
             <YAxis stroke={isDark ? "#94a3b8" : "#475569"} />
             <Tooltip
@@ -100,18 +166,30 @@ export default function Simulation({ refreshKey, isDark }) {
                 color: isDark ? "#fff" : "#0f172a",
               }}
             />
-            <Area type="monotone" dataKey="future" fill="#22d3ee" stroke="none" fillOpacity={0.12} />
-            <Line type="monotone" dataKey="current" stroke="#94a3b8" strokeWidth={3} dot={{ r: 4 }} />
-            <Line type="monotone" dataKey="future" stroke="#22d3ee" strokeWidth={3} dot={{ r: 4 }} />
+            <Area
+              type="monotone"
+              dataKey="future"
+              fill="#22d3ee"
+              stroke="none"
+              fillOpacity={0.12}
+            />
+            <Line
+              type="monotone"
+              dataKey="current"
+              stroke="#94a3b8"
+              strokeWidth={3}
+              dot={{ r: 4 }}
+            />
+            <Line
+              type="monotone"
+              dataKey="future"
+              stroke="#22d3ee"
+              strokeWidth={3}
+              dot={{ r: 4 }}
+            />
           </ComposedChart>
         </ResponsiveContainer>
       </div>
-
-      <p className={`mt-4 text-sm leading-6 ${isDark ? "text-slate-300" : "text-slate-700"}`}>
-        If you consistently add{" "}
-        <span className="font-semibold text-cyan-500">{extraHours} extra productive hours/day</span>,
-        your digital twin predicts a stronger weekly productivity trend.
-      </p>
     </div>
   );
 }
@@ -129,7 +207,9 @@ function InfoBox({ label, value, highlight = false, isDark }) {
           : "border-slate-200 bg-white"
       }`}
     >
-      <p className={`text-xs ${isDark ? "text-slate-400" : "text-slate-500"}`}>{label}</p>
+      <p className={`text-xs ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+        {label}
+      </p>
       <p className="mt-2 text-lg font-semibold">{value}</p>
     </div>
   );
